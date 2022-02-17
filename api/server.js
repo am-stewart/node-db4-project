@@ -12,4 +12,8 @@ server.use((err, req, res, next) => { // eslint-disable-line
   });
 });
 
+server.use('*', (req, res) => {
+    res.json({ api: 'up'})
+})
+
 module.exports = server;
