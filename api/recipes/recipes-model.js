@@ -3,8 +3,10 @@ const db = require('../../data/db-congif')
 async function getByRecipeId(recipe_id) {
     const result = await db('recipes as r')
         .leftJoin('steps as s', 'r.recipe_id', 's.recipe_id')
+        .join('step_ingredients as si', 's.step_id', 'si.step_id')
+        .join('ingredients as i', 'si.ingredient_id', 'i.ingredient_id')
         .where('r.recipe_id', recipe_id)
-        .select('r.*', 's.*')
+        .select('r.*', 's.*', 'si.*', 'i.*')
     
         const recipe = {
             recipe_id: result[0].recipe_id,
@@ -13,18 +15,21 @@ async function getByRecipeId(recipe_id) {
             steps: []
         };
 
-        if (result[0].step_id === null) {
+        if(result[0].step_id === null) {
             return recipe
-        }
+          }
 
-        for (let step of result) {
-            recipe.steps.push({
-                step_id: step.step_id,
-                step_number: step.step_number,
-                step_instructions: step.step_instructions,
-                ingredients: []
-            })
-        }
+        result.forEach( step => {
+            if (step.step_id) {
+                recipe.steps.push({
+                    step_id: step.step_id,
+                    step_number: step.step_number,
+                    step_instructions: step.step_instructions,
+                    ingredients: [{ ingredient_id: step.ingredient_id, ingredient_name: step.ingredient_name, quantity: step.quantity }]
+                })
+            }
+        })
+
     return recipe;
 }
 
